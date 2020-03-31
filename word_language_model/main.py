@@ -10,6 +10,8 @@ import torch.onnx
 import data
 import model
 
+time_pre = int(round(time.time() * 1000));
+
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 RNN/LSTM/GRU/Transformer Language Model')
 parser.add_argument('--data', type=str, default='./data/wikitext-2',
                     help='location of the data corpus')
@@ -91,6 +93,9 @@ train_data = batchify(corpus.train, args.batch_size)
 val_data = batchify(corpus.valid, eval_batch_size)
 test_data = batchify(corpus.test, eval_batch_size)
 
+print("Load data time is ", int(round(time.time() * 1000)) - time_pre,'\n');
+time_pre = int(round(time.time() * 1000));
+
 ###############################################################################
 # Build the model
 ###############################################################################
@@ -102,6 +107,9 @@ else:
     model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied).to(device)
 
 criterion = nn.NLLLoss()
+
+print("Build model time is ", int(round(time.time() * 1000)) - time_pre, '\n')
+time_pre = int(round(time.time() * 1000));
 
 ###############################################################################
 # Training code
@@ -156,6 +164,7 @@ def evaluate(data_source):
 def train():
     # Turn on training mode which enables dropout.
     model.train()
+    global  time_pre
     total_loss = 0.
     start_time = time.time()
     ntokens = len(corpus.dictionary)
@@ -172,6 +181,7 @@ def train():
         else:
             hidden = repackage_hidden(hidden)
             output, hidden = model(data, hidden)
+
         loss = criterion(output, targets)
         loss.backward()
 
@@ -191,6 +201,8 @@ def train():
                 elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
+    print("training time is ", int(round(time.time() * 1000)) - time_pre, '\n');
+    time_pre = int(round(time.time() * 1000))
 
 
 def export_onnx(path, batch_size, seq_len):
@@ -212,6 +224,8 @@ try:
         epoch_start_time = time.time()
         train()
         val_loss = evaluate(val_data)
+        print("evaluation time is", int(round(time.time() * 1000)) - time_pre, '\n');
+        time_pre = int(round(time.time() * 1000))
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
                 'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
@@ -244,6 +258,7 @@ print('=' * 89)
 print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
     test_loss, math.exp(test_loss)))
 print('=' * 89)
+print("saving model time is", int(round(time.time() * 1000)) - time_pre, "\n");
 
 if len(args.onnx_export) > 0:
     # Export the model in ONNX format.
