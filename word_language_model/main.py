@@ -10,6 +10,7 @@ import torch.onnx
 import data
 import model
 
+origin_time = int(round(time.time() * 1000));
 time_pre = int(round(time.time() * 1000));
 
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 RNN/LSTM/GRU/Transformer Language Model')
@@ -259,6 +260,7 @@ print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
     test_loss, math.exp(test_loss)))
 print('=' * 89)
 print("saving model time is", int(round(time.time() * 1000)) - time_pre, "\n");
+print("total time is ", int(round(time.time() * 1000)) - origin_time)
 
 if len(args.onnx_export) > 0:
     # Export the model in ONNX format.
